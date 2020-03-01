@@ -21,7 +21,7 @@ public:
         assert(!ret && "failed to ftruncate");
         address = mmap(address_, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     }
-    void* addr() {
+    operator void*() {
         return address;
     }
     ~shmem() {
@@ -44,7 +44,7 @@ public:
         assert(fd && "failed to shm_open");
         address = mmap(address_, size, PROT_READ, MAP_SHARED, fd, 0);
     }
-    void* addr() {
+    operator void*() {
         return address;
     }
     ~shmem_view() {
