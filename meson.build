@@ -1,6 +1,6 @@
 project('shmem', 'cpp',
   default_options: [
-    'buildtype=debugoptimized',
+    'buildtype=debug',
     'warning_level=3',
     'werror=true',
     'cpp_std=c++17',
@@ -10,6 +10,7 @@ project('shmem', 'cpp',
 add_project_arguments(
   '-Wno-unused-parameter',
   '-Wno-terminate',
+  '-Wno-pointer-arith',
   '-fpermissive',
   language: 'cpp'
 )
