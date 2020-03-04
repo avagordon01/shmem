@@ -4,17 +4,19 @@
 #include <vector>
 
 int main(int argc, char* argv[]) {
+    std::vector<char, shmem_allocator<char>> v;
+    v.push_back('c');
+    std::cout << v.back() << std::endl;
+
+    shmem_view sv("aether_alloc", 0x10, (void*)0x5f0000);
+    fprintf(stderr, "%s\n", (char*)(void*)sv);
+
+    return 0;
+
     if (argc != 2) {
         std::cerr << "usage: " << argv[0] << " (shmem|shmem_view)" << std::endl;
         return 1;
     }
-
-    shmem_allocator<char> a;
-    //std::vector<char, shmem_allocator<char>> v;
-    //v.push_back('c');
-    //std::cout << v.back() << std::endl;
-
-    return 0;
 
     char str[] = "test";
     void* shared_address = (void*)0x3f0000;

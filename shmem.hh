@@ -11,29 +11,31 @@ class shmem {
     void* address;
 
 public:
-    size_t size;
+    size_t size = 0;
+    shmem() = delete;
     shmem(std::string path_, size_t size_, void* address_ = nullptr):
-        path(path_) {
+        path(path_), address(address_) {
         fd = shm_open(path.c_str(), O_CREAT | O_EXCL | O_RDWR, S_IRWXU);
         if (fd < 0) {
             perror("shm_open");
             abort();
         }
         resize(size_);
-        address = mmap(address_, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-        if (address == MAP_FAILED) {
-            perror("mmap");
-            abort();
-        }
-        fprintf(stderr, "shmem fd %i address %p\n", fd, address);
     }
     void resize(size_t size_) {
+        if (size_ == 0) {
+            return;
+        }
         int ret = ftruncate(fd, size_);
         if (ret) {
             perror("ftruncate");
             abort();
         }
-        fprintf(stderr, "ftruncate fd %i size %zu\n", fd, size_);
+        address = mmap(address, size_, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+        if (address == MAP_FAILED) {
+            perror("mmap");
+            abort();
+        }
         size = size_;
     }
     operator void*() {
@@ -61,12 +63,20 @@ class shmem_view {
 public:
     shmem_view(std::string path_, size_t size_, void* address_ = nullptr):
         path(path_), size(size_) {
+        if (size == 0) {
+            fprintf(stderr, "shmem_view: size must be greater than zero\n");
+            abort();
+        }
         int fd = shm_open(path.c_str(), O_RDONLY, S_IRWXU);
         if (fd < 0) {
             perror("shm_open");
             abort();
         }
         address = mmap(address_, size, PROT_READ, MAP_SHARED, fd, 0);
+        if (address == MAP_FAILED) {
+            perror("mmap");
+            abort();
+        }
     }
     operator void*() {
         return address;
@@ -82,9 +92,9 @@ public:
 
 template <class T>
 class shmem_allocator {
-    shmem s = {"alloc", 0, (void*)0x5f0000};
-
 public:
+    shmem s;
+
     using value_type    = T;
 
 //     using pointer       = value_type*;
@@ -100,18 +110,14 @@ public:
 
 //     template <class U> struct rebind {typedef shmem_allocator<U> other;};
 
-    shmem_allocator() noexcept {
-        fprintf(stderr, "shmem_allocator ctor\n");
+    shmem_allocator() noexcept : s("aether_alloc", 0, (void*)0x5f0000) {
     }  // not required, unless used
     template <class U>
-    shmem_allocator(shmem_allocator<U> const&) noexcept {
-        fprintf(stderr, "shmem_allocator ctor\n");
-    }
+    shmem_allocator(shmem_allocator<U> const&) = delete;
 
     value_type* // Use pointer if pointer is not a value_type*
     allocate(std::size_t n) {
-        fprintf(stderr, "shmem_allocator allocate\n");
-        return static_cast<value_type*>(::operator new (n*sizeof(value_type)));
+        //return static_cast<value_type*>(::operator new (n*sizeof(value_type)));
         size_t offset = s.size;
         s.resize(s.size + sizeof(value_type) * n);
         return static_cast<value_type*>(((void*)s) + offset);

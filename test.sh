@@ -13,6 +13,6 @@ trap cleanup EXIT
 
 ninja -C build
 
-./build/shmem_test shmem &
-./build/shmem_test shmem_view &
-wait
+./build/shmem_test shmem
+#./build/shmem_test shmem_view &
+#wait
