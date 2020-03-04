@@ -1,5 +1,3 @@
-#include <cassert>
-
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -17,15 +15,25 @@ public:
     shmem(std::string path_, size_t size_, void* address_ = nullptr):
         path(path_) {
         fd = shm_open(path.c_str(), O_CREAT | O_EXCL | O_RDWR, S_IRWXU);
-        assert(fd && "failed to shm_open");
+        if (fd < 0) {
+            perror("shm_open");
+            abort();
+        }
         resize(size_);
         address = mmap(address_, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+        if (address == MAP_FAILED) {
+            perror("mmap");
+            abort();
+        }
         fprintf(stderr, "shmem fd %i address %p\n", fd, address);
     }
     void resize(size_t size_) {
         int ret = ftruncate(fd, size_);
+        if (ret) {
+            perror("ftruncate");
+            abort();
+        }
         fprintf(stderr, "ftruncate fd %i size %zu\n", fd, size_);
-        assert(!ret && "failed to ftruncate");
         size = size_;
     }
     operator void*() {
@@ -33,9 +41,15 @@ public:
     }
     ~shmem() {
         int ret = munmap(address, size);
-        assert(!ret);
+        if (ret == -1) {
+            perror("munmap");
+            abort();
+        }
         ret = shm_unlink(path.c_str());
-        assert(!ret);
+        if (ret == -1) {
+            perror("shm_unlink");
+            abort();
+        }
     }
 };
 
@@ -48,7 +62,10 @@ public:
     shmem_view(std::string path_, size_t size_, void* address_ = nullptr):
         path(path_), size(size_) {
         int fd = shm_open(path.c_str(), O_RDONLY, S_IRWXU);
-        assert(fd && "failed to shm_open");
+        if (fd < 0) {
+            perror("shm_open");
+            abort();
+        }
         address = mmap(address_, size, PROT_READ, MAP_SHARED, fd, 0);
     }
     operator void*() {
@@ -56,7 +73,10 @@ public:
     }
     ~shmem_view() {
         int ret = munmap(address, size);
-        assert(!ret);
+        if (ret == -1) {
+            perror("munmap");
+            abort();
+        }
     }
 };
 
