@@ -117,10 +117,8 @@ public:
 
     value_type* // Use pointer if pointer is not a value_type*
     allocate(std::size_t n) {
-        //return static_cast<value_type*>(::operator new (n*sizeof(value_type)));
-        size_t offset = s.size;
-        s.resize(s.size + sizeof(value_type) * n);
-        return static_cast<value_type*>(((void*)s) + offset);
+        s.resize(sizeof(value_type) * n);
+        return static_cast<value_type*>((void*)s);
     }
 
     void deallocate(value_type* p, std::size_t) noexcept {// Use pointer if pointer is not a value_type*
