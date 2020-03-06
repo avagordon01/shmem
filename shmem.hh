@@ -61,8 +61,8 @@ class shmem_view {
     void* address;
 
 public:
-    shmem_view(std::string path_, size_t size_, void* address_ = nullptr):
-        path(path_), size(size_) {
+    shmem_view(std::string path_, void* address_ = nullptr):
+        path(path_) {
         if (size == 0) {
             fprintf(stderr, "shmem_view: size must be greater than zero\n");
             abort();
@@ -72,6 +72,13 @@ public:
             perror("shm_open");
             abort();
         }
+        struct stat statbuf;
+        int ret = fstat(fd, &statbuf);
+        if (ret == -1) {
+            perror("fstat");
+            abort();
+        }
+        size = statbuf.st_size;
         address = mmap(address_, size, PROT_READ, MAP_SHARED, fd, 0);
         if (address == MAP_FAILED) {
             perror("mmap");

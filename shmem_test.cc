@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
         sleep(1);
 
         char str[] = "test";
-        shmem_view sv("aether_alloc", 0x10, (void*)0x5f0000);
+        shmem_view sv("aether_alloc", (void*)0x5f0000);
         fprintf(stderr, "%s\n", (char*)(void*)sv);
 
         if (memcmp((void*)sv, str, sizeof(str)) == 0) {
