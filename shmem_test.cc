@@ -9,6 +9,12 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
+    int fd = open("lock", O_CREAT | O_EXCL, S_IRWXU);
+    if (fd == -1 && errno == EEXIST) {
+    } else if (fd == -1) {
+    } else {
+    }
+
     if (strcmp(argv[1], "shmem") == 0) {
         std::vector<char, shmem_allocator<char>> v;
         v.push_back('t');

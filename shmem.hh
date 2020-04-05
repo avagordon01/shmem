@@ -26,8 +26,7 @@ public:
         if (size_ == 0) {
             return;
         }
-        int ret = ftruncate(fd, size_);
-        if (ret) {
+        if (ftruncate(fd, size_)) {
             perror("ftruncate");
             abort();
         }
@@ -42,13 +41,11 @@ public:
         return address;
     }
     ~shmem() {
-        int ret = munmap(address, size);
-        if (ret == -1) {
+        if (munmap(address, size) == -1) {
             perror("munmap");
             abort();
         }
-        ret = shm_unlink(path.c_str());
-        if (ret == -1) {
+        if (shm_unlink(path.c_str()) == -1) {
             perror("shm_unlink");
             abort();
         }
@@ -63,18 +60,13 @@ class shmem_view {
 public:
     shmem_view(std::string path_, void* address_ = nullptr):
         path(path_) {
-        if (size == 0) {
-            fprintf(stderr, "shmem_view: size must be greater than zero\n");
-            abort();
-        }
         int fd = shm_open(path.c_str(), O_RDONLY, S_IRWXU);
         if (fd < 0) {
             perror("shm_open");
             abort();
         }
         struct stat statbuf;
-        int ret = fstat(fd, &statbuf);
-        if (ret == -1) {
+        if (fstat(fd, &statbuf) == -1) {
             perror("fstat");
             abort();
         }
@@ -89,8 +81,7 @@ public:
         return address;
     }
     ~shmem_view() {
-        int ret = munmap(address, size);
-        if (ret == -1) {
+        if (munmap(address, size) == -1) {
             perror("munmap");
             abort();
         }
